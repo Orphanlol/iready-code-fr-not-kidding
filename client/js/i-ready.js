@@ -1,138 +1,157 @@
 /**
- * This file is an OBFUSCATED version of src/assets/js/i-ready.original.js.
+ * This file is an abfuscated version of src/assets/js/i-ready.original.js.
  * Use https://obfuscator.io/ to obfuscate it
  * Any changes to the above file, should be obfuscated with the above utility and pasted below this comment
  * @type {string[]}
  * @private
- * iready fucking learn how tf to spell idiot
  */
-'use strict';
-
 var arrDomain = location.hostname.split(".");
-if (arrDomain.length > 2) {
+if(arrDomain.length > 2)
   arrDomain.shift();
-}
 document.domain = arrDomain.join(".");
-function logout() {
+
+function logout()
+{
+  //set timeout to ensure this can be called from child frame without breaking relative URL
   setTimeout(logout_, 0);
 }
-function logout_() {
+
+function logout_()
+{
+  // if impersonating a user with capublisher, just close the window without destroying the capublisher session
   try {
-    if (window.opener && window.opener.exitSU) {
+    if (window.opener && window.opener.exitSU)
       window.opener.exitSU();
-    } else {
-      window.location = "/logout";
+    else
+      window.location = '/logout';
+  }
+  catch(err) {
+    window.location = '/logout';
+  }
+}
+
+function doBrowserCheck(path)
+{
+	$.ajax({
+	   type: "POST",
+	   url: path,
+	   contentType : "application/json",
+	   dataType : "json",
+	   success: function(data, textStatus) { handleBrowserCheck(data)  },
+	   error: function(XMLHttpRequest, errorString, exceptionThrown) { logToConsole("Error doing browser check " + errorString + " " + exceptionThrown); },
+	   complete: function(XMLHttpRequest, textStatus) { console.log("complete")}  
+	});
+}
+
+function handleBrowserCheck(result) {
+	if(result.browserNotSupported) {
+		$("#browser-not-supported-container").show();
+		$("#browser-not-supported-content").show();
+	}
+	
+	if(result.browserAllowedNotFullySupported) {
+		$("#browser-unknown-container").show();
+		$("#browser-unknown-content").show();
+	}
+}
+
+function getCookie(name)
+{
+	var i,x,y,arrCookies=document.cookie.split(";");
+	for (i=arrCookies.length-1;i>=0;i--)
+	{
+		x=arrCookies[i].substr(0,arrCookies[i].indexOf("="));
+		y=arrCookies[i].substr(arrCookies[i].indexOf("=")+1);
+		x=x.replace(/^\s+|\s+$/g, '');
+		
+		if (x==name)
+		{
+			return unescape(y);
+		}
+	}
+}
+
+function setCookie(name,value,exdays)
+{
+	var exdate = new Date();
+	exdate.setDate(exdate.getDate() + exdays);
+	value = escape(value) + ((exdays === null || exdays === undefined) ? "" : "; expires=" + exdate.toUTCString()) + "; path=/";
+	document.cookie=name + "=" + value;
+}
+
+function logToConsole(msg)
+{
+    if(typeof console != "undefined" && console.log)
+    {
+        console.log(msg);
     }
-  } catch (_0x5009ab) {
-    window.location = "/logout";
-  }
 }
-function doBrowserCheck(tileUrl) {
-  return fetch(tileUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
+        
+function addProtocol(url)
+{
+    if(url.substr(0, 2) == "//")
+    {
+        url = window.location.protocol.replace(':','') + ":" + url;
     }
-  }).then(function (rawResp) {
-    return rawResp.json();
-  }).then(function (primaryTxHex) {
-    handleBrowserCheck(primaryTxHex);
-    return primaryTxHex;
-  }).catch(function (context) {
-    logToConsole("Error doing browser check");
-    logToConsole(context);
-  }).finally(function (canCreateDiscussions) {
-    console.log("complete");
-    return canCreateDiscussions;
-  });
+    return url;
 }
-function handleBrowserCheck(primaryTxHex) {
-  if (primaryTxHex.browserNotSupported) {
-    document.getElementById("browser-not-supported-container").style.display = "block";
-    document.getElementById("browser-not-supported-content").style.display = "block";
-  }
-  if (primaryTxHex.browserAllowedNotFullySupported) {
-    document.getElementById("browser-unknown-container").style.display = "block";
-    document.getElementById("browser-unknown-content").style.display = "block";
-  }
+
+function doReload()
+{
+            //refresh the page
+            window.location.reload();
 }
-function getCookie(name) {
-  var a;
-  var html;
-  var str_out;
-  var wallSimulations = document.cookie.split(";");
-  a = wallSimulations.length - 1;
-  for (; a >= 0; a--) {
-    html = wallSimulations[a].substr(0, wallSimulations[a].indexOf("="));
-    str_out = wallSimulations[a].substr(wallSimulations[a].indexOf("=") + 1);
-    html = html.replace(/^\s+|\s+$/g, "");
-    if (html == name) {
-      return unescape(str_out);
-    }
-  }
+
+function goHome()
+{
+	window.onbeforeunload = null;
+	window.location = '/';
 }
-function setCookie(name, value, expire) {
-  var exdate = new Date();
-  exdate.setDate(exdate.getDate() + expire);
-  value = escape(value) + (expire === null || expire === undefined ? "" : "; expires=" + exdate.toUTCString()) + "; path=/";
-  document.cookie = name + "=" + value;
+
+// Create a cookie with a timestamp in it
+// Check the timestamp in the cookie periodically. 
+// If the timestamp has changed, it means some other browser has open
+// and this one should shut down. 
+function checkIReadyIds()
+{
+	var anotherWindowActive = false;
+	if(landingPage && !allowMultipleLandingPages)
+	{
+		if(created === null)
+		{
+			created = new Date().getTime();
+			setCookie("iready_landing_page_id", created);
+		}
+		else if(getCookie("iready_landing_page_id") != created)
+		{
+			anotherWindowActive = true;
+		}
+	}
+	if(loginCheckEnabled && getCookie("iready_login_id") != loginId)
+	{
+		anotherWindowActive = true;
+	}
+	if(anotherWindowActive)
+	{
+		goHome();
+	}
 }
-function logToConsole(context) {
-  if (typeof console != "undefined" && console.log) {
-    console.log(context);
-  }
+
+function setAllowMultipleLandingPages(value)
+{
+	if (allowMultipleLandingPages && !value)
+	{
+		created = null;
+	}
+	allowMultipleLandingPages = value;
 }
-function addProtocol(url) {
-  if (url.substr(0, 2) == "//") {
-    url = window.location.protocol.replace(":", "") + ":" + url;
-  }
-  return url;
-}
-function doReload() {
-  window.location.reload();
-}
-function goHome() {
-  if (window.location.pathname === "/") {
-    loginId = getCookie("iready_login_id");
-  } else {
-    window.onunload = null;
-    window.onbeforeunload = null;
-    window.location = "/";
-  }
-}
-function checkIReadyIds() {
-  var _0x28db07 = false;
-  if (false && !allowMultipleLandingPages) {
-    if (created === null) {
-      created = new Date().getTime();
-      setCookie("iready_landing_page_id", created);
-    } else if (getCookie("iready_landing_page_id") != created) {
-      _0x28db07 = true;
-    }
-  }
-  if (true && getCookie("iready_login_id") != loginId) {
-    _0x28db07 = true;
-  }
-  if (_0x28db07) {
-    goHome();
-  }
-}
-function setAllowMultipleLandingPages(canCreateDiscussions) {
-  if (allowMultipleLandingPages && !canCreateDiscussions) {
-    created = null;
-  }
-  allowMultipleLandingPages = canCreateDiscussions;
-}
-function addCheckIreadyIds() {
-  if (!document.webkitHidden) {
-    setInterval("checkIReadyIds()", 400);
-  } else {
-    setTimeout("addCheckIreadyIds()", 150);
-  }
-}
+
 var loginCheckEnabled = true;
 var allowMultipleLandingPages = false;
 var loginId = getCookie("iready_login_id");
 var landingPage = false;
 var created = null;
-addCheckIreadyIds();
+if(!document.webkitHidden)
+{
+	setInterval("checkIReadyIds()", 150);
+}
